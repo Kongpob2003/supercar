@@ -119,7 +119,7 @@ router.get("/graph/:uid", async (req, res) => {
           image.imageid,
           image.name,
           DATE(CURDATE()) AS voteDate,
-          500+SUM(vote.score) as score,
+          SUM(vote.score) as score,
           image.imageurl
         FROM vote, image
         WHERE vote.imgid = image.imageid
@@ -133,7 +133,7 @@ router.get("/graph/:uid", async (req, res) => {
         image.imageid,
         image.name,
         DATE(DATE_SUB(NOW(), INTERVAL ? DAY)) AS voteDate,
-        500+SUM(CASE WHEN DATE(vateDate) <= CURDATE() - INTERVAL ? DAY THEN vote.score ELSE 0 END) AS score,
+        SUM(CASE WHEN DATE(vateDate) <= CURDATE() - INTERVAL ? DAY THEN vote.score ELSE 0 END) AS score,
         image.imageurl
       FROM vote, image
       WHERE vote.imgid = image.imageid
