@@ -81,7 +81,7 @@ router.post("/addimg", fileupload.diskLoader.single("file"), async (req, res) =>
     
     try {
         // จัดการกับการอัปโหลดไฟล์ภาพ และข้อมูลผู้ใช้
-        const { name, userid,description } = req.body; // รับข้อมูลจากฟอร์ม
+        const { name,description,userid } = req.body; // รับข้อมูลจากฟอร์ม
         
         // Convert uid to integer
         const intUid = parseInt(userid, 10);
@@ -259,5 +259,90 @@ router.put("/Deleteurl", async(req,res)=>{
 
                 console.error('เกิดข้อผิดพลาดในการลบไฟล์:', error);
             });
+    }
+});
+
+router.post("/changeimg", fileupload.diskLoader.single("file"), async (req, res) => {
+    // ตรวจสอบว่ามีการอัปโหลดไฟล์หรือไม่
+    const storage = getStorage();
+    if (!req.file) {
+        // ถ้าไม่มีไฟล์อัปโหลด
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    try {
+        // จัดการกับการอัปโหลดไฟล์ภาพ และข้อมูลผู้ใช้
+        const { name, uid ,imgid , oldimg,description} = req.body; // รับข้อมูลจากฟอร์ม
+        // Convert uid to integer
+        const intUid = parseInt(uid, 10);
+        const intimgid = parseInt(imgid, 10);
+        // Create file name
+        const filename = Math.round(Math.random() * 10000) + ".png";
+        // Set name to be saved on Firebase storage
+        const storageRef = ref(storage, "images/" + filename);
+        // Set details of the file to be uploaded
+        const metadata ={
+            contentType : req.file.mimetype
+        }
+        // Upload to storage
+        const snapshot = await uploadBytesResumable(storageRef, req.file.buffer, metadata);
+        // Get URL image from storage
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        
+        // Insert user data into database
+        let sql = "DELETE FROM vote WHERE imgid=? AND userid=?";
+        sql = mysql.format(sql, [
+        intimgid,
+        intUid,
+    ]);
+    conn.query(sql, (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Internal Server Error");
+        }
+            sql = "DELETE FROM image WHERE imageid=? AND userid=?";
+            sql = mysql.format(sql, [
+                intimgid,
+                intUid,
+            ]);
+            conn.query(sql, (err, result) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send("Internal Server Error");
+                }
+                if(oldimg){
+                    const filePath = decodeURIComponent(oldimg.split('?')[0].split('/o/')[1]);
+                    const fileRef = ref(storage, filePath);
+                deleteObject(fileRef).then(() => {
+                            // ลบไฟล์สำเร็จ
+                            console.log('ลบไฟล์สำเร็จ');
+                        })
+                        .catch((error) => {
+                            // เกิดข้อผิดพลาด
+                            console.error('เกิดข้อผิดพลาดในการลบไฟล์:', error);
+                        });
+                }
+                sql = "INSERT INTO `image`(`imageurl`,`name`,`description`, `userid`) VALUES (?, ?, ? , ?)";
+                sql = mysql.format(sql, [
+                    downloadUrl,
+                    description,
+                    name,
+                    intUid 
+                ]);
+                conn.query(sql, (err, result) => {
+                    if (err) {
+                        console.error('Error inserting user:', err);
+                        return res.status(500).json({ error: 'Internal server error' });
+                    }
+                    res.status(200).json({
+                        affected_row : result.affectedRows,
+                        success: true
+                    });
+                });
+            });
+    });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
