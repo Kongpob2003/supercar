@@ -272,10 +272,10 @@ router.post("/changeimg", fileupload.diskLoader.single("file"), async (req, res)
     
     try {
         // จัดการกับการอัปโหลดไฟล์ภาพ และข้อมูลผู้ใช้
-        const { name, uid ,imgid , oldimg,description} = req.body; // รับข้อมูลจากฟอร์ม
+        const { name, userid ,imageid , oldimg,description} = req.body; // รับข้อมูลจากฟอร์ม
         // Convert uid to integer
-        const intUid = parseInt(uid, 10);
-        const intimgid = parseInt(imgid, 10);
+        const intUid = parseInt(userid, 10);
+        const intimgid = parseInt(imageid, 10);
         // Create file name
         const filename = Math.round(Math.random() * 10000) + ".png";
         // Set name to be saved on Firebase storage
