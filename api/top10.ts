@@ -166,7 +166,7 @@ router.get("/graph/:uid", async (req, res) => {
 
   // แปลง object ให้กลายเป็น array ของค่าเสียง
   let day7Array = Object.values(day7);
-
+  // ลบด้วยนะจ้ะ
   res.json(day7Array);
 });
 
