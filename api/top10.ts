@@ -17,9 +17,8 @@ router.get("/yesterday", (req, res) => {
             DATE(vote.vateDate) < CURDATE()
         GROUP BY 
             image.imageid, image.imageurl, image.name, image.score, image.Userid 
-        ORDER BY 
-            image.score DESC
-        LIMIT 0, 10 `,
+        
+         `,
     (err, result, fields) => {
       if (result && result.length > 0) {
         // ส่ง response กลับด้วยข้อมูลผู้ใช้
@@ -46,9 +45,7 @@ router.get("/today", (req, res) => {
             vote ON image.imageid = vote.imgid
         GROUP BY 
             image.imageid, image.imageurl, image.name, image.score, image.Userid
-        ORDER BY 
-            image.score DESC
-        LIMIT 0, 10 `,
+         `,
     (err, result, fields) => {
       if (result && result.length > 0) {
         // ส่ง response กลับด้วยข้อมูลผู้ใช้
